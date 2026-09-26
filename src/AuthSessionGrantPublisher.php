@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Componenta\Auth\Session\Http;
 
+use Componenta\Auth\Http\CredentialResponseHeaders;
 use Componenta\Auth\Http\PayloadStorageInterface;
 use Componenta\Auth\Session\AuthSessionGrant;
 use Componenta\Auth\Session\AuthSessionManagerInterface;
@@ -33,10 +34,12 @@ final readonly class AuthSessionGrantPublisher
         }
 
         try {
-            return $this->storage->store(
-                $request,
-                $response,
-                new SessionCredentialPayload($grant->credential),
+            return CredentialResponseHeaders::apply(
+                $this->storage->store(
+                    $request,
+                    $response,
+                    new SessionCredentialPayload($grant->credential),
+                ),
             );
         } catch (\Throwable $exception) {
             $this->sessions->revoke(
