@@ -43,7 +43,7 @@ final class PreAuthenticationHttpTest extends TestCase
         self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
     }
 
-    public function testConsumerRequiresBothBrowserSecrets(): void
+    public function testConsumerSeparatesVerifyAndConsume(): void
     {
         $grant = self::grant();
         $manager = new PreAuthenticationManagerFixture($grant->transaction);
@@ -60,15 +60,12 @@ final class PreAuthenticationHttpTest extends TestCase
                 $grant->requestToken->toString(),
             );
 
+        self::assertSame($grant->transaction, $consumer->verify($request));
+        self::assertSame(1, $manager->verifications);
+        self::assertSame(0, $manager->consumptions);
+
         self::assertSame($grant->transaction, $consumer->consume($request));
-        self::assertSame(
-            $grant->credential->toString(),
-            $manager->credential?->toString(),
-        );
-        self::assertSame(
-            $grant->requestToken->toString(),
-            $manager->requestToken?->toString(),
-        );
+        self::assertSame(1, $manager->consumptions);
     }
 
     private static function grant(): PreAuthenticationGrant
@@ -92,8 +89,8 @@ final class PreAuthenticationHttpTest extends TestCase
 final class PreAuthenticationManagerFixture implements
     PreAuthenticationManagerInterface
 {
-    public ?PreAuthenticationCredential $credential = null;
-    public ?PreAuthenticationRequestToken $requestToken = null;
+    public int $verifications = 0;
+    public int $consumptions = 0;
 
     public function __construct(
         private PreAuthenticationTransaction $transaction,
@@ -104,12 +101,20 @@ final class PreAuthenticationManagerFixture implements
         throw new \LogicException('Not used.');
     }
 
+    public function verify(
+        PreAuthenticationCredential $credential,
+        PreAuthenticationRequestToken $requestToken,
+    ): ?PreAuthenticationTransaction {
+        ++$this->verifications;
+
+        return $this->transaction;
+    }
+
     public function consume(
         PreAuthenticationCredential $credential,
         PreAuthenticationRequestToken $requestToken,
     ): ?PreAuthenticationTransaction {
-        $this->credential = $credential;
-        $this->requestToken = $requestToken;
+        ++$this->consumptions;
 
         return $this->transaction;
     }

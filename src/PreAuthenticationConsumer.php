@@ -29,14 +29,46 @@ final readonly class PreAuthenticationConsumer
         }
     }
 
+    public function verify(
+        #[\SensitiveParameter]
+        ServerRequestInterface $request,
+    ): ?PreAuthenticationTransaction {
+        [$credential, $requestToken] = $this->credentials($request);
+
+        if ($credential === null || $requestToken === null) {
+            return null;
+        }
+
+        return $this->transactions->verify($credential, $requestToken);
+    }
+
     public function consume(
         #[\SensitiveParameter]
         ServerRequestInterface $request,
     ): ?PreAuthenticationTransaction {
+        [$credential, $requestToken] = $this->credentials($request);
+
+        if ($credential === null || $requestToken === null) {
+            return null;
+        }
+
+        return $this->transactions->consume($credential, $requestToken);
+    }
+
+    /**
+     * @return array{
+     *     \Componenta\Auth\Session\PreAuthenticationCredential|null,
+     *     PreAuthenticationRequestToken|null
+     * }
+     */
+    private function credentials(
+        #[\SensitiveParameter]
+        ServerRequestInterface $request,
+    ): array {
         $credential = $this->cookies->extract($request);
 
         if ($credential === null) {
-            return null;
+            return [null, null];
         }
 
         $value = $request->getHeaderLine($this->requestTokenHeader);
@@ -55,6 +87,6 @@ final readonly class PreAuthenticationConsumer
             );
         }
 
-        return $this->transactions->consume($credential, $requestToken);
+        return [$credential, $requestToken];
     }
 }
