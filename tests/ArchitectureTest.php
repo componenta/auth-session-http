@@ -31,9 +31,16 @@ final class ArchitectureTest extends TestCase
         );
 
         self::assertIsArray($composer);
+        $requires = $composer['require'] ?? [];
+
+        self::assertArrayNotHasKey('componenta/session', $requires);
         self::assertArrayNotHasKey(
-            'componenta/session',
-            $composer['require'] ?? [],
+            'componenta/auth-session-csrf',
+            $requires,
+        );
+        self::assertArrayHasKey(
+            'componenta/http-csrf-middleware',
+            $requires,
         );
     }
 }

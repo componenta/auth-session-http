@@ -13,7 +13,8 @@
         "psr/http-factory": "^1.0",
         "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
-        "psr/http-server-middleware": "^1.0"
+        "psr/http-server-middleware": "^1.0",
+        "componenta/http-csrf-middleware": "dev-main"
     },
     "require-dev": {
         "nyholm/psr7": "^1.8",
@@ -31,17 +32,39 @@
         }
     },
     "repositories": [
-        {"type": "vcs", "url": "https://github.com/componenta/auth.git"},
-        {"type": "vcs", "url": "https://github.com/componenta/auth-http.git"},
-        {"type": "vcs", "url": "https://github.com/componenta/auth-session.git"}
+        {
+            "type": "vcs",
+            "url": "https://github.com/componenta/auth.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/componenta/auth-http.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/componenta/auth-session.git"
+        },
+        {
+            "type": "vcs",
+            "url": "https://github.com/componenta/http-csrf-middleware.git"
+        }
     ],
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "extra": {"branch-alias": {"dev-main": "1.0.x-dev"}},
-    "config": {"sort-packages": true},
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0.x-dev"
+        }
+    },
+    "config": {
+        "sort-packages": true
+    },
     "scripts": {
         "test": "@php vendor/bin/phpunit --configuration phpunit.xml.dist",
         "phpstan": "@php vendor/bin/phpstan analyse src --level=max",
-        "check": ["@phpstan", "@test"]
+        "check": [
+            "@phpstan",
+            "@test"
+        ]
     }
 }
