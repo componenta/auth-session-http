@@ -103,6 +103,6 @@ final class StrategyManagerFixture implements AuthSessionManagerInterface
     public function rotate(AuthSession $observed, AuthenticationEvidence $evidence, RotationReason $reason, ?AuthSessionPolicy $policy = null): AuthSessionGrant { throw new \LogicException(); }
     public function revoke(UuidInterface $sessionId, RevocationReason $reason): void {}
     public function revokePresentedCredential(SessionCredential $credential, RevocationReason $reason): void {}
-    public function revokeAll(UuidInterface $subjectId, ?UuidInterface $exceptSessionId = null): void {}
+    public function revokeAll(UuidInterface $subjectId, ?UuidInterface $exceptSessionId = null, RevocationReason $reason = RevocationReason::UserRequested): void {}
     public function isGrantCurrent(AuthSessionGrant $grant): bool { return false; }
 }
