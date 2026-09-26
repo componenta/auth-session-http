@@ -17,3 +17,11 @@ This package also owns browser-only session security:
 
 CSRF lives under `Componenta\Auth\Session\Http\Csrf`; there is no separate
 `componenta/auth-session-csrf` package in the Auth 3 architecture.
+
+
+## Session activity
+
+Idle lifetime is fail-safe. `AuthSessionActivityMiddleware` touches a session
+only when the request attribute `SessionActivity::class` equals
+`SessionActivity::Interactive`. Unclassified/background requests and 401/403
+responses do not extend idle expiry.
