@@ -35,7 +35,7 @@ final class BasicSessionMetadataExtractorTest extends TestCase
         $request = new ServerRequest(
             'GET',
             '/',
-            ['User-Agent' => "bad\nagent"],
+            ['User-Agent' => str_repeat('x', 1025)],
             null,
             '1.1',
             ['REMOTE_ADDR' => 'not-an-ip'],
