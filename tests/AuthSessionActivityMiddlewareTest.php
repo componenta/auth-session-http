@@ -88,7 +88,6 @@ final class AuthSessionActivityMiddlewareTest extends TestCase
             ),
             evidence: new AuthenticationEvidence(['session']),
             credentialGeneration: 1,
-            createdAt: $now,
             authenticatedAt: $now,
             reauthenticatedAt: null,
             lastActiveAt: $now,

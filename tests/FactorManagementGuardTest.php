@@ -96,6 +96,6 @@ final class FactorManagementGuardTest extends TestCase
 
     private function session(UuidInterface $id, UuidInterface $subject, \DateTimeImmutable $at, int $generation = 1, string $method = 'password'): AuthSession
     {
-        return new AuthSession($id, $subject, new AuthenticationEvidence([$method]), $generation, $at, $at, null, $at, $at->modify('+1 hour'), $at->modify('+8 hours'));
+        return new AuthSession($id, $subject, new AuthenticationEvidence([$method]), $generation, $at, null, $at, $at->modify('+1 hour'), $at->modify('+8 hours'));
     }
 }

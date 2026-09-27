@@ -72,7 +72,6 @@ final class SessionAuthenticationStrategyTest extends TestCase
             new AuthenticationEvidence(['session']),
             1,
             $now,
-            $now,
             null,
             $now,
             $now->modify('+30 minutes'),

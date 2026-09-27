@@ -50,7 +50,6 @@ final class AuthSessionCsrfTokenManagerTest extends TestCase
             new AuthenticationEvidence(['session']),
             $generation,
             $now,
-            $now,
             null,
             $now,
             $now->modify('+30 minutes'),

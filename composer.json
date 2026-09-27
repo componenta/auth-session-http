@@ -5,16 +5,16 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
-        "componenta/auth": "dev-auth-3",
-        "componenta/auth-http": "dev-main",
-        "componenta/auth-session": "dev-main",
-        "componenta/identity": "^1.0",
+        "componenta/auth": "^3.0",
+        "componenta/auth-http": "^1.0",
+        "componenta/auth-session": "^1.0",
+        "componenta/identity": "^1.0.1",
         "psr/clock": "^1.0",
         "psr/http-factory": "^1.0",
         "psr/http-message": "^2.0",
         "psr/http-server-handler": "^1.0",
         "psr/http-server-middleware": "^1.0",
-        "componenta/http-csrf-middleware": "dev-main"
+        "componenta/http-csrf-middleware": "^2.0"
     },
     "require-dev": {
         "nyholm/psr7": "^1.8",
@@ -49,7 +49,7 @@
             "url": "https://github.com/componenta/http-csrf-middleware.git"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "prefer-stable": true,
     "extra": {
         "branch-alias": {
