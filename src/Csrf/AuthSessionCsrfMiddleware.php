@@ -27,9 +27,6 @@ final readonly class AuthSessionCsrfMiddleware implements MiddlewareInterface
         private bool $checkOrigin = true,
         private array $trustedOrigins = [],
         private array $excludedPaths = [],
-        private bool $checkFetchMetadata = true,
-        private bool $allowMissingOrigin = false,
-        private bool $debugFailureHeader = false,
     ) {}
 
     #[\Override]
@@ -55,9 +52,6 @@ final readonly class AuthSessionCsrfMiddleware implements MiddlewareInterface
             checkOrigin: $this->checkOrigin,
             trustedOrigins: $this->trustedOrigins,
             excludedPaths: $this->excludedPaths,
-            checkFetchMetadata: $this->checkFetchMetadata,
-            allowMissingOrigin: $this->allowMissingOrigin,
-            debugFailureHeader: $this->debugFailureHeader,
         ))->process($request, $handler);
     }
 }
