@@ -17,6 +17,7 @@
         "psr/http-server-middleware": "^1.0"
     },
     "require-dev": {
+        "infection/infection": "^0.35.4",
         "nyholm/psr7": "^1.8.2",
         "phpstan/phpstan": "^2.1",
         "phpunit/phpunit": "^12.0"
@@ -57,7 +58,10 @@
         }
     },
     "config": {
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
     },
     "scripts": {
         "test": "@php vendor/bin/phpunit --configuration phpunit.xml.dist",
@@ -65,6 +69,7 @@
         "check": [
             "@phpstan",
             "@test"
-        ]
+        ],
+        "mutation": "@php vendor/bin/infection --threads=4 --min-msi=80 --min-covered-msi=80 --no-progress"
     }
 }
