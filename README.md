@@ -18,6 +18,14 @@ This package also owns browser-only session security:
 CSRF lives under `Componenta\Auth\Session\Http\Csrf`; there is no separate
 `componenta/auth-session-csrf` package in the Auth 3 architecture.
 
+The package requires `componenta/http-csrf-middleware ^3.0`. Unsafe browser
+requests therefore follow the CSRF v3 trust model: Fetch Metadata is used as
+defense in depth, Origin/Referer is verified, and the token is bound to the
+authoritative authentication session. Middleware integration relies on the
+guarded handler being invoked, not on PSR-7 response object identity, so
+response decoration such as `Vary` does not turn an accepted request into a
+false rejection.
+
 
 ## Session activity
 
