@@ -12,8 +12,9 @@ Compatibility patch for CSRF v3 response decoration.
 ### Verification
 - PHP 8.4 and 8.5 with the current `componenta/http-csrf-middleware ^3.0` dependency.
 - Composer security audit.
-- PHPStan level max over source and tests.
-- PHPUnit behavioral regression suite.
+- PHPStan level max over source and tests: 0 errors.
+- PHPUnit: 82 tests / 194 assertions.
+- Infection mutation coverage 100%, covered-code MSI 90%.
 
 ## v2.0.0
 
