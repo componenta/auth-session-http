@@ -44,6 +44,15 @@ final readonly class AuthSessionCsrfTokenManager implements CsrfTokenManagerInte
         return $this->token();
     }
 
+    /** @return array{session: string, key: string} */
+    public function __debugInfo(): array
+    {
+        return [
+            'session' => '[REDACTED]',
+            'key' => '[REDACTED]',
+        ];
+    }
+
     private function token(): string
     {
         $mac = hash_hmac(
