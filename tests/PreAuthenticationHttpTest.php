@@ -93,7 +93,7 @@ final class PreAuthenticationManagerFixture implements
     public int $consumptions = 0;
 
     public function __construct(
-        private PreAuthenticationTransaction $transaction,
+        private ?PreAuthenticationTransaction $transaction,
     ) {}
 
     public function create(int $ttlSeconds = 300): PreAuthenticationGrant
