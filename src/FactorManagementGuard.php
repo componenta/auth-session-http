@@ -81,22 +81,29 @@ final readonly class FactorManagementGuard
 
         // Deliberately no path exemptions or origin-check bypass. The token is
         // validated against authoritative session generation, not request data.
-        $accepted = $this->responses->createResponse(204);
-        $result = (new AuthSessionCsrfMiddleware(
+        $accepted = new class($this->responses->createResponse(204)) implements RequestHandlerInterface {
+            public bool $called = false;
+
+            public function __construct(private readonly ResponseInterface $response) {}
+
+            public function handle(ServerRequestInterface $request): ResponseInterface
+            {
+                $this->called = true;
+
+                return $this->response;
+            }
+        };
+
+        (new AuthSessionCsrfMiddleware(
             responses: $this->responses,
             key: $this->csrfKey,
             trustedOrigins: $this->trustedOrigins,
         ))->process(
             $request->withAttribute(AuthSession::class, $current),
-            new readonly class($accepted) implements RequestHandlerInterface {
-                public function __construct(private ResponseInterface $response) {}
-                public function handle(ServerRequestInterface $request): ResponseInterface
-                {
-                    return $this->response;
-                }
-            },
+            $accepted,
         );
-        return $result === $accepted ? null : $this->refuse(403);
+
+        return $accepted->called ? null : $this->refuse(403);
     }
 
     /** @return array{csrfKey: string} */
