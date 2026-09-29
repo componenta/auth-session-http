@@ -67,6 +67,7 @@ final class FactorManagementGuardTest extends TestCase
         $request = (new ServerRequest($case === 'get' ? 'GET' : 'POST', 'https://example.test/factors'))
             ->withAttribute(IdentityInterface::class, $identity)
             ->withAttribute(AuthSession::class, $observed)
+            ->withHeader('Origin', 'https://example.test')
             ->withHeader('X-CSRF-Token', (new AuthSessionCsrfTokenManager($observed, $key))->generate());
 
         if ($case === 'no-csrf') {
@@ -75,6 +76,10 @@ final class FactorManagementGuardTest extends TestCase
 
         if ($case === 'foreign-origin') {
             $request = $request->withHeader('Origin', 'https://attacker.test');
+        }
+
+        if ($case === 'missing-origin') {
+            $request = $request->withoutHeader('Origin');
         }
 
         if ($case === 'no-session') {
@@ -101,7 +106,7 @@ final class FactorManagementGuardTest extends TestCase
     {
         yield 'allowed' => ['allowed', null];
 
-        foreach (['stale', 'future', 'forged-fresh-attribute', 'remembered-only', 'no-csrf', 'foreign-origin', 'disabled'] as $case) {
+        foreach (['stale', 'future', 'forged-fresh-attribute', 'remembered-only', 'no-csrf', 'foreign-origin', 'missing-origin', 'disabled'] as $case) {
             yield $case => [$case, 403];
         }
 
