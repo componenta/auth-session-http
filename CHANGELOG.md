@@ -1,5 +1,20 @@
 # Changelog
 
+## v2.0.1
+
+Compatibility patch for CSRF v3 response decoration.
+
+### Fixed
+- `FactorManagementGuard` no longer treats PSR-7 response object identity as the signal that CSRF validation succeeded.
+- CSRF acceptance is now determined by whether the guarded downstream handler was invoked.
+- The guard remains compatible when `componenta/http-csrf-middleware` decorates an accepted response, including the `Vary` fields added in CSRF v3.0.1.
+
+### Verification
+- PHP 8.4 and 8.5 with the current `componenta/http-csrf-middleware ^3.0` dependency.
+- Composer security audit.
+- PHPStan level max over source and tests.
+- PHPUnit behavioral regression suite.
+
 ## v2.0.0
 
 Breaking coordinated release for the CSRF v3 browser security contract.
