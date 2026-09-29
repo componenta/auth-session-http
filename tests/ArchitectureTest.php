@@ -12,35 +12,28 @@ final class ArchitectureTest extends TestCase
 {
     public function testAuthSessionIsTheTypedAuthenticationState(): void
     {
-        self::assertTrue(
-            is_a(
-                AuthSession::class,
-                AuthenticationStateInterface::class,
-                true,
-            ),
-        );
+        $interfaces = class_implements(AuthSession::class);
+
+        self::assertIsArray($interfaces);
+        self::assertArrayHasKey(AuthenticationStateInterface::class, $interfaces);
     }
 
     public function testPackageDoesNotDependOnLegacySessionComponent(): void
     {
-        $composer = json_decode(
-            file_get_contents(dirname(__DIR__) . '/composer.json'),
-            true,
-            512,
-            JSON_THROW_ON_ERROR,
-        );
+        $path = dirname(__DIR__) . '/composer.json';
+        $json = file_get_contents($path);
+
+        self::assertIsString($json);
+
+        $composer = json_decode($json, true, 512, JSON_THROW_ON_ERROR);
 
         self::assertIsArray($composer);
-        $requires = $composer['require'] ?? [];
+
+        $requires = $composer['require'] ?? null;
+        self::assertIsArray($requires);
 
         self::assertArrayNotHasKey('componenta/session', $requires);
-        self::assertArrayNotHasKey(
-            'componenta/auth-session-csrf',
-            $requires,
-        );
-        self::assertArrayHasKey(
-            'componenta/http-csrf-middleware',
-            $requires,
-        );
+        self::assertArrayNotHasKey('componenta/auth-session-csrf', $requires);
+        self::assertArrayHasKey('componenta/http-csrf-middleware', $requires);
     }
 }
