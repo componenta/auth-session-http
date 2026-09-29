@@ -14,15 +14,31 @@ jobs:
       matrix:
         php: ['8.4', '8.5']
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
         with:
           php-version: ${{ matrix.php }}
           coverage: none
-          tools: composer:v2
+          tools: composer:2.9.8@sha256:59b2c50e10cafa0d8efc19ede9a326d782f096c674a26baf98cf042ce23de890
       - run: composer validate --strict
       - run: composer update --no-interaction --no-progress --prefer-dist
       - if: matrix.php == '8.4'
         run: composer audit --no-interaction
-      - run: composer phpstan
-      - run: composer test
+      - run: composer check
+
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
+      - uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240
+        with:
+          php-version: '8.5'
+          coverage: pcov
+          tools: composer:2.9.8@sha256:59b2c50e10cafa0d8efc19ede9a326d782f096c674a26baf98cf042ce23de890
+      - run: composer update --no-interaction --no-progress --prefer-dist
+      - run: composer audit --no-interaction
+      - run: composer mutation
