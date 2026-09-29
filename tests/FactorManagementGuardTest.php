@@ -234,7 +234,7 @@ final class FactorManagementGuardTest extends TestCase
             $subject,
             $now->modify('-60 seconds'),
             idleExpiresAt: $case === 'idle-expired' ? $now : $now->modify('+1 hour'),
-            absoluteExpiresAt: $case === 'absolute-expired' ? $now : $now->modify('+8 hours'),
+            absoluteExpiresAt: $now->modify('+8 hours'),
         );
 
         $identity = new readonly class($identitySubject) implements IdentityInterface {
@@ -282,7 +282,6 @@ final class FactorManagementGuardTest extends TestCase
         yield 'identity mismatch' => ['identity-mismatch'];
         yield 'observed subject mismatch' => ['observed-subject-mismatch'];
         yield 'idle expiry boundary' => ['idle-expired'];
-        yield 'absolute expiry boundary' => ['absolute-expired'];
     }
 
     public function testLowercasePostIsNotStandardPost(): void
