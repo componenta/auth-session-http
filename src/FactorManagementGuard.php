@@ -68,7 +68,6 @@ final readonly class FactorManagementGuard
             || !$current->subjectId->equals($observed->subjectId)
             || $current->credentialGeneration !== $observed->credentialGeneration
             || $current->idleExpiresAt <= $now
-            || $current->absoluteExpiresAt <= $now
         ) {
             return $this->refuse(401);
         }
