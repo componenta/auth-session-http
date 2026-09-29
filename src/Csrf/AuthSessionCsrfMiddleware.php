@@ -29,6 +29,12 @@ final readonly class AuthSessionCsrfMiddleware implements MiddlewareInterface
         private array $excludedPaths = [],
     ) {}
 
+    /** @return array{key: string} */
+    public function __debugInfo(): array
+    {
+        return ['key' => '[REDACTED]'];
+    }
+
     #[\Override]
     public function process(
         #[\SensitiveParameter]
