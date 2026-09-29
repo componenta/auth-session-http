@@ -6,7 +6,9 @@ namespace Componenta\Auth\Session\Http\Tests\Csrf;
 
 use Componenta\Auth\AuthenticationEvidence;
 use Componenta\Auth\Session\AuthSession;
+use Componenta\Auth\Session\Http\Csrf\AuthSessionCsrfMiddleware;
 use Componenta\Auth\Session\Http\Csrf\AuthSessionCsrfTokenManager;
+use Nyholm\Psr7\Factory\Psr17Factory;
 use Componenta\Identity\Uuid;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
@@ -38,6 +40,21 @@ final class AuthSessionCsrfTokenManagerTest extends TestCase
             $session->uuid->toString(),
             $token,
         );
+    }
+
+    public function testDebugOutputRedactsKeyAndSessionIdentity(): void
+    {
+        $session = self::session(1);
+        $key = str_repeat('secret-key-', 4);
+        $manager = new AuthSessionCsrfTokenManager($session, $key);
+        $middleware = new AuthSessionCsrfMiddleware(new Psr17Factory(), $key);
+
+        $managerDebug = print_r($manager, true);
+        self::assertStringNotContainsString($key, $managerDebug);
+        self::assertStringNotContainsString($session->uuid->toString(), $managerDebug);
+
+        $middlewareDebug = print_r($middleware, true);
+        self::assertStringNotContainsString($key, $middlewareDebug);
     }
 
     private static function session(int $generation): AuthSession
