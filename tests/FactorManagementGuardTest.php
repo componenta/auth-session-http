@@ -148,12 +148,173 @@ final class FactorManagementGuardTest extends TestCase
         yield 'exceeds freshness limit' => [new AssuranceRequirement(['password'], maxAge: 601)];
     }
 
+    #[DataProvider('validAssuranceBoundaries')]
+    public function testAssuranceAndCsrfKeyBoundaryValuesAreAccepted(
+        int $maxAge,
+        int $keyLength,
+    ): void {
+        $registry = $this->createStub(AuthSessionRegistryInterface::class);
+        $admission = new AuthenticationAdmission(
+            $this->createStub(IdentityProviderInterface::class),
+            $this->createStub(AuthenticationGuardInterface::class),
+        );
+
+        $guard = new FactorManagementGuard(
+            $registry,
+            $admission,
+            new AssuranceRequirement(['password'], maxAge: $maxAge),
+            new FrozenClock(1000, 'UTC'),
+            new Psr17Factory(),
+            str_repeat('k', $keyLength),
+        );
+
+        self::assertSame(
+            ['csrfKey' => '[REDACTED]'],
+            $guard->__debugInfo(),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{int, int}>
+     */
+    public static function validAssuranceBoundaries(): iterable
+    {
+        yield 'minimum assurance and key' => [1, 32];
+        yield 'maximum assurance and key' => [600, 4096];
+    }
+
+    #[DataProvider('invalidGuardConfiguration')]
+    public function testInvalidGuardConfigurationIsRejected(
+        AssuranceRequirement $requirement,
+        int $keyLength,
+    ): void {
+        $this->expectException(InvalidArgumentException::class);
+
+        new FactorManagementGuard(
+            $this->createStub(AuthSessionRegistryInterface::class),
+            new AuthenticationAdmission(
+                $this->createStub(IdentityProviderInterface::class),
+                $this->createStub(AuthenticationGuardInterface::class),
+            ),
+            $requirement,
+            new FrozenClock(1000, 'UTC'),
+            new Psr17Factory(),
+            str_repeat('k', $keyLength),
+        );
+    }
+
+    /**
+     * @return iterable<string, array{AssuranceRequirement, int}>
+     */
+    public static function invalidGuardConfiguration(): iterable
+    {
+        yield 'zero freshness' => [new AssuranceRequirement(['password'], maxAge: 0), 32];
+        yield 'freshness above maximum' => [new AssuranceRequirement(['password'], maxAge: 601), 32];
+        yield 'key below minimum' => [new AssuranceRequirement(['password'], maxAge: 300), 31];
+        yield 'key above maximum' => [new AssuranceRequirement(['password'], maxAge: 300), 4097];
+    }
+
+    #[DataProvider('authoritativeSessionMismatchCases')]
+    public function testAuthoritativeSessionMismatchFailsClosed(string $case): void
+    {
+        $clock = new FrozenClock('2030-01-01T00:00:00+00:00', 'UTC');
+        $uuid = new UuidFactory();
+        $subject = $uuid->generate();
+        $otherSubject = $uuid->generate();
+        $sessionId = $uuid->generate();
+        $now = $clock->now();
+
+        $observedSubject = $case === 'observed-subject-mismatch' ? $otherSubject : $subject;
+        $identitySubject = $case === 'identity-mismatch' ? $otherSubject : $subject;
+        $currentId = $case === 'uuid-mismatch' ? $uuid->generate() : $sessionId;
+
+        $observed = $this->session($sessionId, $observedSubject, $now->modify('-60 seconds'));
+        $current = $this->session(
+            $currentId,
+            $subject,
+            $now->modify('-60 seconds'),
+            idleExpiresAt: $case === 'idle-expired' ? $now : $now->modify('+1 hour'),
+            absoluteExpiresAt: $case === 'absolute-expired' ? $now : $now->modify('+8 hours'),
+        );
+
+        $identity = new readonly class($identitySubject) implements IdentityInterface {
+            public function __construct(public UuidInterface $uuid) {}
+        };
+
+        $registry = $this->createStub(AuthSessionRegistryInterface::class);
+        $registry->method('find')->willReturn($current);
+        $identities = $this->createStub(IdentityProviderInterface::class);
+        $identities->method('findByUuid')->willReturn($identity);
+        $admission = new AuthenticationAdmission(
+            $identities,
+            $this->createStub(AuthenticationGuardInterface::class),
+        );
+
+        $key = str_repeat('k', 32);
+        $guard = new FactorManagementGuard(
+            $registry,
+            $admission,
+            new AssuranceRequirement(['password'], maxAge: 300),
+            $clock,
+            new Psr17Factory(),
+            $key,
+        );
+        $request = (new ServerRequest('POST', 'https://example.test/factors'))
+            ->withAttribute(IdentityInterface::class, $identity)
+            ->withAttribute(AuthSession::class, $observed)
+            ->withHeader('Origin', 'https://example.test')
+            ->withHeader('X-CSRF-Token', (new AuthSessionCsrfTokenManager($observed, $key))->generate());
+
+        $response = $guard->check($request);
+
+        self::assertNotNull($response);
+        self::assertSame(401, $response->getStatusCode());
+        self::assertSame('no-store', $response->getHeaderLine('Cache-Control'));
+        self::assertSame('no-cache', $response->getHeaderLine('Pragma'));
+    }
+
+    /**
+     * @return iterable<string, array{string}>
+     */
+    public static function authoritativeSessionMismatchCases(): iterable
+    {
+        yield 'uuid mismatch' => ['uuid-mismatch'];
+        yield 'identity mismatch' => ['identity-mismatch'];
+        yield 'observed subject mismatch' => ['observed-subject-mismatch'];
+        yield 'idle expiry boundary' => ['idle-expired'];
+        yield 'absolute expiry boundary' => ['absolute-expired'];
+    }
+
+    public function testLowercasePostIsNotStandardPost(): void
+    {
+        $clock = new FrozenClock('2030-01-01T00:00:00+00:00', 'UTC');
+        $guard = new FactorManagementGuard(
+            $this->createStub(AuthSessionRegistryInterface::class),
+            new AuthenticationAdmission(
+                $this->createStub(IdentityProviderInterface::class),
+                $this->createStub(AuthenticationGuardInterface::class),
+            ),
+            new AssuranceRequirement(['password'], maxAge: 300),
+            $clock,
+            new Psr17Factory(),
+            str_repeat('k', 32),
+        );
+
+        $response = $guard->check(new ServerRequest('post', 'https://example.test/factors'));
+
+        self::assertNotNull($response);
+        self::assertSame(405, $response->getStatusCode());
+        self::assertSame('POST', $response->getHeaderLine('Allow'));
+    }
+
     private function session(
         UuidInterface $id,
         UuidInterface $subject,
         \DateTimeImmutable $at,
         int $generation = 1,
         string $method = 'password',
+        ?\DateTimeImmutable $idleExpiresAt = null,
+        ?\DateTimeImmutable $absoluteExpiresAt = null,
     ): AuthSession {
         return new AuthSession(
             $id,
@@ -163,8 +324,8 @@ final class FactorManagementGuardTest extends TestCase
             $at,
             null,
             $at,
-            $at->modify('+1 hour'),
-            $at->modify('+8 hours'),
+            $idleExpiresAt ?? $at->modify('+1 hour'),
+            $absoluteExpiresAt ?? $at->modify('+8 hours'),
         );
     }
 }
