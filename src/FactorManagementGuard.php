@@ -24,6 +24,9 @@ use Psr\Http\Server\RequestHandlerInterface;
  */
 final readonly class FactorManagementGuard
 {
+    /** @var list<string> */
+    private array $trustedOrigins;
+
     /** @param list<string> $trustedOrigins */
     public function __construct(
         private AuthSessionRegistryInterface $sessions,
@@ -33,7 +36,7 @@ final readonly class FactorManagementGuard
         private ResponseFactoryInterface $responses,
         #[\SensitiveParameter]
         private string $csrfKey,
-        private array $trustedOrigins = [],
+        array $trustedOrigins = [],
     ) {
         if (
             $requirement->maxAge === null
@@ -46,6 +49,9 @@ final readonly class FactorManagementGuard
         if (strlen($csrfKey) < 32 || strlen($csrfKey) > 4096) {
             throw new \InvalidArgumentException('CSRF key must contain between 32 and 4096 bytes.');
         }
+
+        // Keep the origin policy stable after this guard is constructed.
+        $this->trustedOrigins = array_map(static fn(string $origin): string => $origin, $trustedOrigins);
     }
 
     /** Returns a terminal refusal, or null only when every check succeeds. */

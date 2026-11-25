@@ -26,6 +26,42 @@ use PHPUnit\Framework\TestCase;
 
 final class FactorManagementGuardTest extends TestCase
 {
+    public function testTrustedOriginsAreAnOwnedConfigurationSnapshot(): void
+    {
+        $clock = new FrozenClock('2030-01-01T00:00:00+00:00', 'UTC');
+        $uuids = new UuidFactory();
+        $identity = new readonly class($uuids->generate()) implements IdentityInterface {
+            public function __construct(public UuidInterface $uuid) {}
+        };
+        $session = $this->session($uuids->generate(), $identity->uuid, $clock->now());
+        $registry = $this->createStub(AuthSessionRegistryInterface::class);
+        $registry->method('find')->willReturn($session);
+        $identities = $this->createStub(IdentityProviderInterface::class);
+        $identities->method('findByUuid')->willReturn($identity);
+        $admission = $this->createStub(AuthenticationGuardInterface::class);
+        $admission->method('check')->willReturn(null);
+        $origin = 'https://console.example.test';
+        $key = str_repeat('k', 32);
+        $guard = new FactorManagementGuard(
+            $registry,
+            new AuthenticationAdmission($identities, $admission),
+            new AssuranceRequirement(requiredMethods: ['password'], maxAge: 300),
+            $clock,
+            new Psr17Factory(),
+            $key,
+            trustedOrigins: [&$origin],
+        );
+        $origin = 'https://other.example.test';
+        $request = (new ServerRequest('POST', 'https://example.test/factors'))
+            ->withAttribute(IdentityInterface::class, $identity)
+            ->withAttribute(AuthSession::class, $session)
+            ->withHeader('Origin', 'https://console.example.test')
+            ->withHeader('X-CSRF-Token', (new AuthSessionCsrfTokenManager($session, $key))->generate());
+
+        self::assertSame(403, $guard->check($request->withHeader('Origin', $origin))?->getStatusCode());
+        self::assertNull($guard->check($request));
+    }
+
     #[DataProvider('requests')]
     public function testAuthoritativeSessionFreshnessAdmissionAndCsrf(string $case, ?int $status): void
     {

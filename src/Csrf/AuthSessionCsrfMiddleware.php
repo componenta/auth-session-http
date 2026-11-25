@@ -14,6 +14,12 @@ use Psr\Http\Server\RequestHandlerInterface;
 
 final readonly class AuthSessionCsrfMiddleware implements MiddlewareInterface
 {
+    /** @var list<string> */
+    private array $trustedOrigins;
+
+    /** @var list<string> */
+    private array $excludedPaths;
+
     /**
      * @param list<string> $trustedOrigins
      * @param list<string> $excludedPaths
@@ -25,9 +31,13 @@ final readonly class AuthSessionCsrfMiddleware implements MiddlewareInterface
         private string $headerName = 'X-CSRF-Token',
         private string $fieldName = '_csrf_token',
         private bool $checkOrigin = true,
-        private array $trustedOrigins = [],
-        private array $excludedPaths = [],
-    ) {}
+        array $trustedOrigins = [],
+        array $excludedPaths = [],
+    ) {
+        // Detach caller aliases before building the per-request CSRF delegate.
+        $this->trustedOrigins = array_map(static fn(string $origin): string => $origin, $trustedOrigins);
+        $this->excludedPaths = array_map(static fn(string $path): string => $path, $excludedPaths);
+    }
 
     /** @return array{key: string} */
     public function __debugInfo(): array
