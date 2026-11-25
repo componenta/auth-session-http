@@ -39,9 +39,15 @@ final readonly class PreAuthenticationStartHandler implements
     ): ResponseInterface {
         $grant = $this->transactions->create($this->ttlSeconds);
 
-        return $this->publisher->publish(
-            $this->responses->createResponse(204),
-            $grant,
-        );
+        try {
+            return $this->publisher->publish(
+                $this->responses->createResponse(204),
+                $grant,
+            );
+        } catch (\Throwable $exception) {
+            $this->transactions->consume($grant->credential, $grant->requestToken);
+
+            throw $exception;
+        }
     }
 }
