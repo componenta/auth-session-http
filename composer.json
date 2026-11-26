@@ -4,11 +4,11 @@
     "type": "library",
     "license": "MIT",
     "require": {
-        "componenta/auth": "^3.0",
-        "componenta/auth-http": "^1.0",
-        "componenta/auth-session": "^1.0",
-        "componenta/http-csrf-middleware": "^3.0",
-        "componenta/identity": "^1.0.1",
+        "componenta/auth": "^4.0.0",
+        "componenta/auth-http": "^2.0.0",
+        "componenta/auth-session": "^2.0.0",
+        "componenta/http-csrf-middleware": "^4.0.0",
+        "componenta/identity": "^1.1.1",
         "php": "^8.4",
         "psr/clock": "^1.0",
         "psr/http-factory": "^1.1",
@@ -54,7 +54,8 @@
     "prefer-stable": true,
     "extra": {
         "branch-alias": {
-            "dev-main": "2.0.x-dev"
+            "dev-main": "2.0.x-dev",
+            "dev-release/auth-dependency-baseline-2026-11-26": "3.0.x-dev"
         }
     },
     "config": {
