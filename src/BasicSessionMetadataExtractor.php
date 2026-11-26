@@ -26,6 +26,7 @@ final readonly class BasicSessionMetadataExtractor implements
         if (
             $userAgent !== ''
             && strlen($userAgent) <= 1024
+            && preg_match('//u', $userAgent) === 1
             && preg_match('/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/', $userAgent) !== 1
         ) {
             $metadata['userAgent'] = $userAgent;
