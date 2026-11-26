@@ -26,6 +26,18 @@ guarded handler being invoked, not on PSR-7 response object identity, so
 response decoration such as `Vary` does not turn an accepted request into a
 false rejection.
 
+## Session grant publication
+
+`AuthSessionGrantPublisher` validates that a grant is current before publishing
+it. Without a `CredentialTransportState` request attribute, it stores the
+credential immediately and applies the response's non-caching headers.
+
+When authentication middleware already owns a transport state, the publisher
+queues the grant and its failure compensation in that state and returns the
+unchanged response. The owning middleware publishes the queue after downstream
+handling. This preserves publication order when a restored session is
+reauthenticated in the same request: the newer generation supplies the final
+cookie. A publication failure or terminal clear revokes an unpublished grant.
 
 ## Session activity
 
